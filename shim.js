@@ -74,12 +74,7 @@
       try { s.cb(s.id ? snapDoc(s.c, s.id) : snapCol(s.c)); } catch (e) { console.error(e); }
     }
   }
-  function startPolling() {
-    if (polling) return;
-    const tick = () => { if (document.visibilityState === "visible") fetchAll().catch(() => {}); };
-    polling = setInterval(tick, 30000);
-    document.addEventListener("visibilitychange", tick);
-  }
+  function startPolling() {} // no background checks: data loads when the app opens or is refreshed
   function subscribe(c, id, cb, err) {
     const s = { c, id, cb, last: undefined }; subs.push(s);
     (state ? Promise.resolve() : (subscribe.p = subscribe.p || fetchAll())).then(() => { if (s.last === undefined) { notify(); } startPolling(); }, e => err && err(e));
