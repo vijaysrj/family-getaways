@@ -1,0 +1,14 @@
+# Our Family Getaways
+
+Family vacation planner: holiday and long-weekend finder, trip ideas, to-dos, bookings, day-by-day plans and diary, AI ideas on the go, and photos saved straight to Google Photos.
+
+Static `index.html` + `shim.js`, with small Vercel functions in `api/`.
+
+Settings (Vercel environment variables):
+- `APP_PASSWORD` – the family password
+- `AUTH_SECRET` – random string for signing the login cookie
+- `KV_REST_API_URL`, `KV_REST_API_TOKEN` – Upstash Redis (added by the Vercel Marketplace integration)
+- `GEMINI_API_KEY` (or `ANTHROPIC_API_KEY`) – for AI ideas; optional `GEMINI_MODEL` / `AI_MODEL`
+- `GOOGLE_CLIENT_ID` – OAuth web client for Google Photos uploads
+
+Each year's public holidays: add `holidays/<year>.json` and list the year in `holidays/index.json`.
