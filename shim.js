@@ -79,6 +79,16 @@
     } catch (_) {}
     return staticHol;
   }
+  let staticPlaces = null;
+  async function loadStaticPlaces() {
+    if (staticPlaces) return staticPlaces;
+    staticPlaces = [];
+    try {
+      const idx = await (await fetch("/places/index.json", { cache: "no-cache" })).json();
+      for (const f of idx.files || []) { try { const a = await (await fetch("/places/" + f, { cache: "no-cache" })).json(); staticPlaces.push(...(Array.isArray(a) ? a : [])); } catch (_) {} }
+    } catch (_) {}
+    return staticPlaces;
+  }
   async function fetchAll() {
     const r = await fetch("/api/db", { credentials: "same-origin" });
     if (r.status === 401) { me = null; location.reload(); return; }
@@ -86,6 +96,9 @@
     const data = await r.json();
     const sh = await loadStaticHolidays();
     for (const y in sh) if (!data.holidays[y]) data.holidays[y] = sh[y]; // yearly lists shipped with the site fill in missing years
+    const norm = x => String(x || "").toLowerCase().replace(/[^a-z]/g, "");
+    const have = new Set(Object.values(data.destinations).map(d => norm(d.name)));
+    for (const p of await loadStaticPlaces()) if (p && p.id && !data.destinations[p.id] && !have.has(norm(p.name))) { data.destinations[p.id] = p; have.add(norm(p.name)); } // new places added each year
     const now = Date.now();
     if (state) for (const k in dirty) { if (now - dirty[k] < 8000) { const [c, id] = k.split("/"); if (state[c][id] === undefined) delete data[c][id]; else data[c][id] = state[c][id]; } else delete dirty[k]; }
     state = data; notify();

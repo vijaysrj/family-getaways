@@ -12,3 +12,5 @@ Settings (Vercel environment variables):
 - `GOOGLE_CLIENT_ID` – OAuth web client for Google Photos uploads
 
 Each year's public holidays: add `holidays/<year>.json` and list the year in `holidays/index.json`.
+
+New places each year: add `places/<year>.json` (an array of `{id, name, kind: "india"|"abroad", region, months[], cost: [lo, hi] in ₹ thousands for the family, days, why, visa?}`) and list the file in `places/index.json`. Places already in the app (same id or name) are skipped.
