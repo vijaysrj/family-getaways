@@ -7,20 +7,40 @@
   const dirty = {}; // "c/id" -> time of last local write, so a poll doesn't undo typing in progress
 
   /* ---------- login screen ---------- */
-  const css = `#fg-login{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#fff8f1;padding:16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-#fg-login .card{max-width:360px;width:100%;background:#fff;border:1px solid #f1dfcf;border-radius:20px;padding:26px;box-shadow:0 10px 40px rgba(120,60,0,.08);text-align:center}
-#fg-login h1{font-size:1.4rem;margin:10px 0 4px;color:#2b1d12}#fg-login p{color:#7a6656;font-size:.92rem;margin:0 0 16px}
-#fg-login input{width:100%;box-sizing:border-box;font-size:1rem;padding:12px 14px;border:1.5px solid #ead7c6;border-radius:12px;margin-bottom:10px}
-#fg-login button{width:100%;font-size:1rem;font-weight:700;padding:12px;border:0;border-radius:12px;color:#fff;background:linear-gradient(90deg,#f59f00,#f76707);cursor:pointer}
-#fg-login .err{color:#c92a2a;font-size:.88rem;min-height:1.2em;margin-top:8px}#fg-login ul{text-align:left;color:#5c4a3c;font-size:.9rem}`;
+  const css = `#fg-login{position:fixed;inset:0;z-index:100;overflow:auto;background:#fffaf4;color:#2b1d12;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+#fg-login .sky{position:relative;background:linear-gradient(180deg,#ffb36b 0%,#ffd8a8 55%,#fff1e0 100%);padding:28px 16px 120px;text-align:center;overflow:hidden}
+#fg-login .sun{position:absolute;left:50%;top:150px;width:220px;height:220px;margin-left:-110px;border-radius:50%;background:radial-gradient(circle,#fff3bf 0 45%,rgba(255,243,191,.35) 46% 62%,transparent 63%)}
+#fg-login .brand{position:relative;display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem}
+#fg-login h1{position:relative;font-size:clamp(2rem,7vw,3.4rem);line-height:1.05;margin:26px auto 12px;max-width:14ch;letter-spacing:-.01em}
+#fg-login .tag{position:relative;max-width:40ch;margin:0 auto;color:#5c3d24;font-size:1.05rem}
+#fg-login .hills{position:absolute;left:0;right:0;bottom:0;width:100%;height:120px}
+#fg-login form{position:relative;max-width:380px;margin:-70px auto 0;background:#fff;border:1px solid #f1dfcf;border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(120,60,0,.12)}
+#fg-login form label{display:block;font-weight:700;font-size:.9rem;margin-bottom:8px}
+#fg-login input{width:100%;box-sizing:border-box;font-size:1rem;padding:12px 14px;border:1.5px solid #ead7c6;border-radius:12px;margin-bottom:10px;background:#fffaf4}
+#fg-login button{width:100%;font-size:1rem;font-weight:800;padding:13px;border:0;border-radius:12px;color:#fff;background:linear-gradient(90deg,#f59f00,#f76707);cursor:pointer}
+#fg-login .err{color:#c92a2a;font-size:.88rem;min-height:1.2em;margin-top:8px;text-align:center}
+#fg-login .feats{max-width:1040px;margin:34px auto 0;padding:0 16px 40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+#fg-login .feat{background:#fff;border:1px solid #f3e4d6;border-radius:18px;padding:16px}
+#fg-login .feat i{font-style:normal;font-size:1.5rem}#fg-login .feat b{display:block;margin:6px 0 4px}#fg-login .feat span{color:#7a6656;font-size:.9rem}
+#fg-login .note{text-align:center;color:#9a8473;font-size:.8rem;padding:0 16px 30px}
+#fg-login .card{max-width:380px;margin:-70px auto 0;position:relative;background:#fff;border-radius:22px;padding:22px;border:1px solid #f1dfcf}#fg-login ul{color:#5c4a3c;font-size:.92rem}`;
+  const FEATS = [["📅", "Every long weekend, found", "Public holidays turned into breaks, with the leave days you'd need."],
+    ["🧭", "Places for each season", "Ideas in India and abroad that skip the rains, with rough costs."],
+    ["✅", "To-dos and bookings", "Tickets, hotels, visas and packing, in one shared list."],
+    ["✨", "Ideas on the go", "Ask what to do right now, with your trip already filled in."],
+    ["📷", "Diary and photos", "A note for each day, photos saved to Google Photos."]];
   function loginScreen(info) {
     return new Promise(resolve => {
       const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
       const d = document.createElement("div"); d.id = "fg-login";
       const missing = [!info.password && "a family password (APP_PASSWORD)", !info.storage && "the Upstash Redis database"].filter(Boolean);
-      d.innerHTML = missing.length
-        ? `<div class="card"><img src="/icon.svg" width="56" height="56" alt="" style="display:block;margin:0 auto"><h1>Almost ready</h1><p>The app still needs these in Vercel settings:</p><ul>${missing.map(m => `<li>${m}</li>`).join("")}</ul></div>`
-        : `<form class="card"><img src="/icon.svg" width="56" height="56" alt="" style="display:block;margin:0 auto"><h1>Our Family Getaways</h1><p>Enter the family password</p><input type="password" autocomplete="current-password" required autofocus><button>Open</button><div class="err"></div></form>`;
+      const top = `<div class="sky"><div class="sun"></div><div class="brand"><img src="/icon.svg" width="34" height="34" alt="">Our Family Getaways</div>
+        <h1>Plan every holiday together</h1><p class="tag">Long weekends, trip ideas, to-dos and memories for the four of us, in one place.</p>
+        <svg class="hills" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 Q200 20 420 60 T820 50 T1200 60 V120 H0Z" fill="#ffe1bf"/><path d="M0 95 Q260 55 520 88 T1000 80 T1200 86 V120 H0Z" fill="#fffaf4"/></svg></div>`;
+      d.innerHTML = top + (missing.length
+        ? `<div class="card"><b>Almost ready</b><p>The app still needs these in Vercel settings:</p><ul>${missing.map(m => `<li>${m}</li>`).join("")}</ul></div>`
+        : `<form><label for="fg-pw">Family password</label><input id="fg-pw" type="password" autocomplete="current-password" required autofocus><button>Open our planner</button><div class="err"></div></form>`)
+        + `<div class="feats">${FEATS.map(f => `<div class="feat"><i>${f[0]}</i><b>${f[1]}</b><span>${f[2]}</span></div>`).join("")}</div><div class="note">Private to our family. You stay signed in on this device.</div>`;
       const mount = () => document.body.appendChild(d);
       document.body ? mount() : document.addEventListener("DOMContentLoaded", mount);
       const f = d.querySelector("form"); if (!f) return;
@@ -31,6 +51,12 @@
       });
     });
   }
+  document.addEventListener("click", async e => {
+    const b = e.target.closest && e.target.closest("#signout"); if (!b) return;
+    try { await fetch("/api/login", { method: "DELETE" }); } catch (_) {}
+    try { sessionStorage.removeItem("fg-gtok"); } catch (_) {}
+    location.href = "/";
+  });
   async function ensureLogin() {
     if (me) return me;
     me = (async () => {
