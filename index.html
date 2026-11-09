@@ -775,10 +775,10 @@ Give 8-10 things to do, 3-4 stay areas, 4-6 food items, and a day plan for ${d.d
 }
 async function getGuide(d){
   if(PR.busy[d.id]||!S.sample)return;PR.busy[d.id]=true;PR.err[d.id]="";rerenderGuide(d);
-  try{const r=await S.sample.json(guidePrompt(d),{modelTier:"default"});
+  try{const r=await S.sample.json(guidePrompt(d),{modelTier:"default",fast:true});
     if(!r||typeof r.overview!=="string")throw {code:"invalid_json"};
     saveResearch(d.id,{guide:r,guideAt:new Date().toISOString().slice(0,10)});}
-  catch(e){const c=e&&e.code;PR.err[d.id]=c==="rate_limited"?"Too many asks just now. Try again in a minute.":c==="invalid_json"?"The guide came back garbled. Tap the button to try again.":c==="ai_missing"?"AI isn't set up on the server.":"Couldn't reach AI right now. Check your connection and try again."}
+  catch(e){const c=e&&e.code;PR.err[d.id]=c==="rate_limited"?"Too many asks just now. Try again in a minute.":c==="invalid_json"?"The guide came back garbled. Tap the button to try again.":c==="ai_missing"?"AI isn't set up on the server.":c==="timeout"?"AI took too long to answer. Tap the button to try again.":"Couldn't get the guide from AI. Tap the button to try again."+(e&&e.message?" ("+String(e.message).slice(0,120)+")":"")}
   PR.busy[d.id]=false;rerenderGuide(d);
 }
 function rerenderGuide(d){if(S.placeOpen!==d.id)return;const el=$("#pguide");if(el)el.outerHTML=guideHtml(d)}
