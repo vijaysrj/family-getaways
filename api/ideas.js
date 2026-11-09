@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: process.env.AI_MODEL || "claude-haiku-5-5", max_tokens: 2500, messages: [{ role: "user", content: prompt }] })
+        body: JSON.stringify({ model: process.env.AI_MODEL || "claude-haiku-5-5", max_tokens: 6000, messages: [{ role: "user", content: prompt }] })
       });
       const j = await r.json();
       if (r.status === 429) return send(res, 429, { code: "rate_limited" });

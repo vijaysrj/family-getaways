@@ -63,6 +63,7 @@ main{padding-block:20px 70px}
 .btn.primary:hover{color:#2b1400;filter:brightness(1.05)}
 .btn.ghost{background:transparent}
 .btn.tiny{padding:4px 11px;font-size:.8rem}
+a.btn{text-decoration:none;color:var(--ink);display:inline-block}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:.76rem;font-weight:700;background:var(--weekend);color:var(--muted);white-space:nowrap}
 .chip.free{background:var(--hol-soft);color:var(--hol)}
 .chip.long{background:var(--violet-soft);color:var(--violet)}
@@ -302,6 +303,33 @@ a.act:hover{text-decoration:underline}
 .idea .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:4px}
 .idea a.btn{text-decoration:none;color:var(--ink)}
 .ainote{margin-top:10px;font-size:.9rem;background:var(--bg);border-radius:12px;padding:10px}
+/* place research page */
+.pfacts{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 14px}
+.pfacts .chip{font-size:.8rem;padding:4px 11px}
+.pgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.pgrid{grid-template-columns:minmax(0,1fr)}}
+.pgrid h3{margin:0 0 10px}
+.pnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.pnav a{text-decoration:none;color:var(--ink)}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.plist li{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.plist li b{font-size:.95rem}
+.plist li .meta{display:flex;flex-wrap:wrap;gap:6px}
+.pbul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:.92rem}
+.ptable{width:100%;border-collapse:collapse;font-size:.92rem}
+.ptable td{padding:7px 4px;border-bottom:1px dashed var(--line);vertical-align:top}
+.ptable td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ptable tr.tot td{border-bottom:0;font-size:1rem;color:var(--violet)}
+.pdays{display:flex;flex-direction:column;gap:8px}
+.pdays div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:.92rem}
+.pdays em{font-style:normal;font-weight:800;background:var(--accent-soft);color:#9a5b00;border-radius:10px;padding:2px 9px;height:fit-content;white-space:nowrap}
+.pskel{height:14px;border-radius:7px;background:var(--weekend);margin:8px 0}
+@media (prefers-reduced-motion: no-preference){.pskel{animation:pulse 1.2s ease-in-out infinite alternate}@keyframes pulse{to{opacity:.45}}}
+.plinks{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:4px}
+.plinks li{display:flex;gap:8px;align-items:center;padding:4px 6px;border-radius:10px}
+.plinks li:hover{background:var(--bg)}
+.plinks li a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--violet);font-weight:600}
+.age{font-size:.7rem;font-weight:800;border-radius:999px;padding:2px 8px;background:var(--hol-soft);color:var(--hol)}
 .hrows{display:flex;flex-direction:column;gap:6px;margin:4px 0 6px;font-weight:400;color:var(--ink)}
 .hrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .hrow .h-name{flex:1;min-width:140px}
@@ -406,6 +434,8 @@ a.act:hover{text-decoration:underline}
 
   <!-- EXPLORE -->
   <section id="view-explore" hidden>
+    <div id="placedetailwrap" hidden></div>
+    <div id="placelistwrap">
     <div class="yearhead pagehead">
       <div class="row"><span class="ic" style="background:var(--violet-soft);color:var(--violet)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></span><div><h2>Explore places</h2><div class="muted small">Costs are rough totals for the four of you: flights, hotel, food, local travel and sightseeing.</div></div></div>
       <button class="btn primary" id="openaddplace">Add your own place</button>
@@ -450,6 +480,7 @@ a.act:hover{text-decoration:underline}
       </div>
       <p class="small muted" id="visitedlist"></p>
     </details>
+    </div>
   </section>
 
   <!-- TRIPS -->
@@ -476,8 +507,8 @@ const DOW=["M","T","W","T","F","S","S"];
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-const S={thumbs:{},db:null,ready:false,holidays:{},dests:[],prefs:{visited:[],visitedOther:[],satWork:false,extraOff:{}},trips:[],
-  year:null,slotFilter:"all",selSlot:null,ek:"all",tripOpen:null};
+const S={thumbs:{},db:null,ready:false,holidays:{},dests:[],prefs:{visited:[],visitedOther:[],satWork:false,extraOff:{}},trips:[],research:{},
+  year:null,slotFilter:"all",selSlot:null,ek:"all",tripOpen:null,placeOpen:null};
 
 /* ---------- dates ---------- */
 const iso=d=>d.toISOString().slice(0,10);
@@ -524,13 +555,16 @@ function finder(year){
 const TABS=["plan","explore","trips","save"];
 function route(){
   let h=(location.hash||"#plan").slice(1); let tab=h, trip=null;
+  let place=null;
   if(h.startsWith("trip-")){tab="trips";trip=h.slice(5)}
+  if(h.startsWith("place-")){tab="explore";place=decodeURIComponent(h.slice(6))}
   if(!TABS.includes(tab))tab="plan";
-  S.tripOpen=trip;
+  const moved=S.placeOpen!==place;S.tripOpen=trip;S.placeOpen=place;
   TABS.forEach(t=>{$("#view-"+t).hidden=t!==tab;const a=document.querySelector(`[data-tab="${t}"]`);a.toggleAttribute("aria-current",t===tab);if(t===tab)a.setAttribute("aria-current","page")});
   render();
+  if(moved&&!h.startsWith("pg-"))window.scrollTo(0,0);
 }
-window.addEventListener("hashchange",route);
+window.addEventListener("hashchange",e=>{if((location.hash||"").startsWith("#pg-"))return;route()});
 
 function render(){
   if(!$("#view-plan").hidden)renderPlan();
@@ -656,6 +690,7 @@ function destCard(d,slot){
     ${d.visa?`<div class="meta">Visa: ${esc(d.visa)}</div>`:""}
     ${d.note?`<span class="chip warn">${esc(d.note)}</span>`:""}
     <div class="acts">${v?'<span class="chip free">Visited</span>':""}${d.custom?'<span class="chip value">Our place</span>':""}
+      <a class="btn tiny" href="#place-${encodeURIComponent(d.id)}" style="text-decoration:none;color:inherit">🔎 Explore</a>
       <button class="btn tiny primary" data-plan="${d.id}"${slot&&slot.end?` data-s="${slot.start}" data-e="${slot.end}"`:""}>Plan this trip</button>
       <button class="btn tiny" data-visit="${d.id}">${v?"Not visited":"Mark visited"}</button>${d.custom?`<button class="btn tiny ghost" data-rmplace="${d.id}">Remove</button>`:""}</div>
     </div>
@@ -678,6 +713,10 @@ async function saveNewPlace(){
   }catch(e){msg.textContent="Couldn't save: "+(e.message||e.code)}
 }
 function renderExplore(){
+  const pd=S.placeOpen&&S.dests.find(x=>x.id===S.placeOpen);
+  $("#placelistwrap").hidden=!!pd;$("#placedetailwrap").hidden=!pd;
+  if(S.placeOpen&&!pd&&!S.ready){$("#placelistwrap").hidden=true;$("#placedetailwrap").hidden=false;$("#placedetailwrap").innerHTML='<div class="empty">Loading place…</div>';return}
+  if(pd){renderPlaceDetail(pd);return}
   const nm=$("#np-months");if(!nm.children.length)nm.innerHTML=MONTHS.map((m,i)=>`<button type="button" class="btn tiny" data-npm="${i+1}" aria-pressed="false">${m}</button>`).join("");
   const sel=$("#emonth");if(sel.options.length===1)MONTHS_LONG.forEach((m,i)=>sel.add(new Option(m,i+1)));
   if(!S.ready){$("#ecards").innerHTML='<div class="empty">Loading places…</div>';return}
@@ -687,6 +726,135 @@ function renderExplore(){
   const names=S.dests.filter(isVisited).map(d=>d.name).concat(S.prefs.visitedOther||[]);
   $("#visitedlist").textContent=names.length?"Visited so far: "+names.join(", "):"";
 }
+
+/* ---------- place research: read up on a place before planning a trip ---------- */
+const PR={busy:{},err:{},auto:{}};
+function researchOf(id){return S.research[id]||{}}
+function saveResearch(id,patch,delay=0){
+  S.research[id]={...researchOf(id),...patch,updated:Date.now()};
+  if(!S.db){$("#pmsg")&&($("#pmsg").textContent="Sign in to save.");return}
+  clearTimeout(pending["r:"+id]);
+  pending["r:"+id]=setTimeout(async()=>{try{await S.db.doc("research/"+id).set(JSON.parse(JSON.stringify(S.research[id])));const m=$("#pmsg");if(m){m.textContent="Saved";setTimeout(()=>{if(m.textContent==="Saved")m.textContent=""},2000)}}catch(e){const m=$("#pmsg");if(m)m.textContent="Couldn't save: "+(e.message||e.code)}},delay);
+}
+function placeName(d){return (d.name||"").split(/ and |,|:|\(/)[0].trim()}
+function researchLinks(d){
+  const n=placeName(d),full=n+(d.region&&d.region!=="—"?", "+d.region:"");
+  const L=[["Wikivoyage guide","https://en.wikivoyage.org/w/index.php?search="+encodeURIComponent(n)],
+    ["Things to do with kids",gq("things to do with kids in "+full)],
+    ["Family reviews (TripAdvisor)","https://www.tripadvisor.in/Search?q="+encodeURIComponent(n)],
+    ["Travel vlogs (YouTube)","https://www.youtube.com/results?search_query="+encodeURIComponent(n+" family trip vlog")],
+    ["Map","https://www.google.com/maps/search/"+encodeURIComponent(full)],
+    ["Weather by month",gq(n+" weather by month")],
+    ["Flights from Chennai","https://www.google.com/travel/flights?q="+encodeURIComponent("Flights to "+n+" from Chennai")]];
+  if(d.kind==="abroad")L.push(["Visa for Indian passports",gq(full+" visa for Indian citizens official")]);
+  else L.push(["Trains (IRCTC)","https://www.irctc.co.in/nget/train-search"]);
+  return L;
+}
+function guidePrompt(d){
+  return `You are an experienced family travel planner. A family from Chennai, India (two adults, kids aged 10 and 4, upper-middle-class budget) is researching a possible trip before deciding to plan it.
+Place: ${d.name}${d.region?", "+d.region:""} (${d.kind==="abroad"?"abroad, Indian passports":"within India"}). Usual trip length: ${d.days} days. Our rough estimate: ₹${d.cost[0]}k to ₹${d.cost[1]}k total for the four. Best months we noted: ${d.months.map(m=>MONTHS[m-1]).join(", ")}.${d.why?" Why it caught our eye: "+d.why+".":""}
+
+Give a practical, honest research brief. Prices in Indian rupees for the family of four, realistic for the current year. Mark which activities suit the 4-year-old, the 10-year-old, or both. Prefer safe, well-reviewed options. Mention anything that's a poor fit for a 4-year-old.
+Reply with JSON only, in this shape:
+{"overview":"3-4 sentences on what the place is like and why families go",
+"fit":"one sentence on how well it suits kids of 10 and 4",
+"bestMonths":[month numbers 1-12],"avoidMonths":[month numbers],"season":"2-3 sentences on weather through the year and what to avoid (rain, heat, crowds, school holiday rush)",
+"gettingThere":[{"mode":"Flight / Train / Road","detail":"route from Chennai, connections","time":"e.g. 2 hr","cost":"e.g. ₹35,000-50,000 return for 4"}],
+"gettingAround":"one or two sentences",
+"todo":[{"title":"","why":"one sentence","for":"both or 10 or 4","time":"e.g. half day","cost":"e.g. ₹2,000 or Free","book":"booking tip or empty"}],
+"stay":[{"area":"neighbourhood or area","why":"one sentence for families","price":"family room per night, e.g. ₹8,000-12,000"}],
+"food":[{"name":"dish or place","note":"kid- or veg-friendly note"}],
+"foodTips":"one or two sentences: vegetarian/South Indian options, water, kid snacks",
+"costs":[{"item":"Flights or trains","amount":"₹…"},{"item":"Stay (N nights)","amount":"₹…"},{"item":"Food","amount":"₹…"},{"item":"Local travel","amount":"₹…"},{"item":"Activities and tickets","amount":"₹…"}],"total":"₹… to ₹…",
+"save":["3-5 ways to cut cost without cutting safety or quality"],
+"safety":["3-5 safety notes"],"health":["2-4 health notes: vaccines, water, sun, altitude, motion sickness"],
+"visa":"${d.kind==="abroad"?"visa/entry rules for Indian passport holders, how and when to apply, rough fee for 4":""}",
+"kids":["3-4 tips for travelling here with a 4-year-old and a 10-year-old"],
+"days":[{"day":1,"plan":"one line"}]}
+Give 8-10 things to do, 3-4 stay areas, 4-6 food items, and a day plan for ${d.days} days.`;
+}
+async function getGuide(d){
+  if(PR.busy[d.id]||!S.sample)return;PR.busy[d.id]=true;PR.err[d.id]="";rerenderGuide(d);
+  try{const r=await S.sample.json(guidePrompt(d),{modelTier:"default"});
+    if(!r||typeof r.overview!=="string")throw {code:"invalid_json"};
+    saveResearch(d.id,{guide:r,guideAt:new Date().toISOString().slice(0,10)});}
+  catch(e){const c=e&&e.code;PR.err[d.id]=c==="rate_limited"?"Too many asks just now. Try again in a minute.":c==="invalid_json"?"The guide came back garbled. Tap the button to try again.":c==="ai_missing"?"AI isn't set up on the server.":"Couldn't reach AI right now. Check your connection and try again."}
+  PR.busy[d.id]=false;rerenderGuide(d);
+}
+function rerenderGuide(d){if(S.placeOpen!==d.id)return;const el=$("#pguide");if(el)el.outerHTML=guideHtml(d)}
+const ageTag=f=>{f=String(f||"").toLowerCase();return f.includes("4")&&!f.includes("10")?"Age 4":f.includes("10")&&!f.includes("4")?"Age 10":f.includes("adult")?"Adults":"Both kids"};
+const L_=a=>Array.isArray(a)?a:[];
+function guideHtml(d){
+  const r=researchOf(d.id),g=r.guide,busy=PR.busy[d.id],err=PR.err[d.id];
+  const head=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">✨ Research guide</h3>${g?`<span class="small muted">From AI, ${esc(r.guideAt||"")}${S.sample?` · <button class="btn tiny ghost" data-pguide="${d.id}"${busy?" disabled":""}>${busy?"Refreshing…":"Refresh"}</button>`:""}</span>`:""}</div>`;
+  if(!g){
+    if(busy)return `<div class="panel" id="pguide">${head}<p class="small muted">Reading up on ${esc(placeName(d))} for the four of you. This takes about half a minute…</p>${[90,75,82,60,88,70].map(w=>`<div class="pskel" style="width:${w}%"></div>`).join("")}</div>`;
+    return `<div class="panel" id="pguide">${head}
+      <p style="margin:6px 0 10px">${esc(d.why||"")}${d.why?".":""} Usually ${d.days} days, about ${money(d.cost[0])}–${money(d.cost[1])} for the four of you.${d.visa?" Visa: "+esc(d.visa)+".":""}</p>
+      ${err?`<div class="ainote" style="color:var(--warn)">${esc(err)}</div>`:""}
+      ${S.sample?`<button class="btn primary" style="margin-top:10px" data-pguide="${d.id}">Get the full research guide</button><p class="small muted" style="margin:8px 0 0">Things to do for each kid, getting there from Chennai, where to stay, costs, safety and ${d.kind==="abroad"?"visa":"season"} notes. Saved here once it's ready.</p>`:`<p class="small muted">AI isn't switched on, so use the links on the right to read up.</p>`}</div>`;
+  }
+  const sec=(id,t,body)=>body?`<div class="panel" id="pg-${id}"><h3>${t}</h3>${body}</div>`:"";
+  const bul=a=>L_(a).length?`<ul class="pbul">${L_(a).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
+  const mchips=(a,cls)=>L_(a).filter(m=>m>=1&&m<=12).map(m=>`<span class="chip ${cls}">${MONTHS[m-1]}</span>`).join(" ");
+  const nav=[["overview","Overview"],["todo","Things to do"],["season","When to go"],["there","Getting there"],["stay","Where to stay"],["food","Food"],["costs","Costs"],["safety","Safety"],d.kind==="abroad"&&g.visa?["visa","Visa"]:null,["days","Day plan"]].filter(Boolean);
+  return `<div class="stack" id="pguide">
+  <div class="panel" id="pg-overview">${head}
+    <div class="pnav" style="margin-top:10px">${nav.map(([k,l])=>`<a class="btn tiny" href="#pg-${k}" data-pjump="pg-${k}">${l}</a>`).join("")}</div>
+    <p style="margin:0 0 8px">${esc(g.overview)}</p>${g.fit?`<p class="small" style="margin:0"><b>For our kids:</b> ${esc(g.fit)}</p>`:""}
+    ${err?`<div class="ainote" style="color:var(--warn)">${esc(err)}</div>`:""}</div>
+  ${sec("todo","Things to do",L_(g.todo).length?`<ul class="plist">${L_(g.todo).map(x=>`<li><b>${esc(x.title)}</b><span class="small">${esc(x.why||"")}</span><span class="meta"><span class="age">${ageTag(x.for)}</span>${x.time?`<span class="chip">${esc(x.time)}</span>`:""}${x.cost?`<span class="chip value">${esc(x.cost)}</span>`:""}</span>${x.book?`<span class="small muted">Tip: ${esc(x.book)}</span>`:""}</li>`).join("")}</ul>`:"")}
+  ${sec("season","When to go",`${L_(g.bestMonths).length?`<div class="row small" style="gap:6px;margin-bottom:6px"><b>Best</b> ${mchips(g.bestMonths,"free")}</div>`:""}${L_(g.avoidMonths).length?`<div class="row small" style="gap:6px;margin-bottom:8px"><b>Avoid</b> ${mchips(g.avoidMonths,"warn")}</div>`:""}${g.season?`<p class="small" style="margin:0">${esc(g.season)}</p>`:""}`)}
+  ${sec("there","Getting there from Chennai",(L_(g.gettingThere).length?`<ul class="plist">${L_(g.gettingThere).map(x=>`<li><b>${esc(x.mode)}</b><span class="small">${esc(x.detail||"")}</span><span class="meta">${x.time?`<span class="chip">${esc(x.time)}</span>`:""}${x.cost?`<span class="chip value">${esc(x.cost)}</span>`:""}</span></li>`).join("")}</ul>`:"")+(g.gettingAround?`<p class="small" style="margin:10px 0 0"><b>Getting around:</b> ${esc(g.gettingAround)}</p>`:""))}
+  ${sec("stay","Where to stay",L_(g.stay).length?`<ul class="plist">${L_(g.stay).map(x=>`<li><b>${esc(x.area)}</b><span class="small">${esc(x.why||"")}</span>${x.price?`<span class="meta"><span class="chip value">${esc(x.price)}</span></span>`:""}</li>`).join("")}</ul>`:"")}
+  ${sec("food","Food",(L_(g.food).length?`<ul class="pbul">${L_(g.food).map(x=>`<li><b>${esc(x.name)}</b>${x.note?" – "+esc(x.note):""}</li>`).join("")}</ul>`:"")+(g.foodTips?`<p class="small" style="margin:10px 0 0">${esc(g.foodTips)}</p>`:""))}
+  ${sec("costs","Rough costs for the four of us",(L_(g.costs).length?`<table class="ptable">${L_(g.costs).map(x=>`<tr><td>${esc(x.item)}</td><td>${esc(x.amount)}</td></tr>`).join("")}${g.total?`<tr class="tot"><td><b>Total</b></td><td>${esc(g.total)}</td></tr>`:""}</table>`:"")+(L_(g.save).length?`<p class="small" style="margin:12px 0 6px;font-weight:700">Ways to save</p>${bul(g.save)}`:""))}
+  ${sec("safety","Safety and health",(L_(g.safety).length?bul(g.safety):"")+(L_(g.health).length?`<p class="small" style="margin:12px 0 6px;font-weight:700">Health</p>${bul(g.health)}`:"")+(L_(g.kids).length?`<p class="small" style="margin:12px 0 6px;font-weight:700">With a 4- and a 10-year-old</p>${bul(g.kids)}`:""))}
+  ${d.kind==="abroad"&&g.visa?sec("visa","Visa and entry",`<p class="small" style="margin:0">${esc(g.visa)}</p><p class="small muted" style="margin:8px 0 0">Rules change. Check the official embassy or e-visa site before you book.</p>`):""}
+  ${sec("days",`A ${d.days}-day plan`,L_(g.days).length?`<div class="pdays">${L_(g.days).map((x,i)=>`<div><em>Day ${esc(x.day||i+1)}</em><span>${esc(x.plan)}</span></div>`).join("")}</div>`:"")}
+  <p class="small muted" style="margin:0">AI research can be out of date. Check prices, timings and rules before you book.</p>
+  </div>`;
+}
+function renderPlaceDetail(d){
+  const r=researchOf(d.id),v=isVisited(d),links=L_(r.links);
+  const trips=S.trips.filter(t=>t.destId===d.id);
+  if(!r.guide&&S.sample&&!PR.auto[d.id]&&!PR.busy[d.id]){PR.auto[d.id]=true;setTimeout(()=>getGuide(d),0)}
+  $("#placedetailwrap").innerHTML=`
+  <div class="row" style="justify-content:space-between;margin-bottom:10px"><a class="btn tiny" href="#explore">← All places</a><span class="status-line" id="pmsg"></span></div>
+  <div class="triphero">${scene(d)}<h2>${esc(d.name)}</h2></div>
+  <div class="pfacts"><span class="chip">${esc(d.region||"")}</span><span class="chip long">${d.kind==="abroad"?"Abroad":"India"} · ${d.days} days</span><span class="chip value">${money(d.cost[0])}–${money(d.cost[1])} for 4</span>${v?'<span class="chip free">Visited</span>':""}${d.note?`<span class="chip warn">${esc(d.note)}</span>`:""}</div>
+  <div class="pgrid">
+    <div class="stack">${guideHtml(d)}</div>
+    <div class="stack">
+      <div class="panel"><h3>Ready to go?</h3>
+        <div class="small muted" style="margin-bottom:6px">Good months</div>
+        <div class="monthstrip" style="margin-bottom:12px">${MONTHS.map((m,i)=>`<i class="${d.months.includes(i+1)?"on":""}" title="${MONTHS[i]}">${m[0]}</i>`).join("")}</div>
+        <div class="row"><button class="btn primary" data-plan="${d.id}">Plan this trip</button><button class="btn tiny" data-visit="${d.id}">${v?"Not visited":"Mark visited"}</button></div>
+        ${trips.length?`<div class="small" style="margin-top:10px">Already planned: ${trips.map(t=>`<a href="#trip-${t.id}">${esc(t.title)}${t.start?" ("+fmtD(t.start)+")":""}</a>`).join(", ")}</div>`:""}
+      </div>
+      <div class="panel"><h3>Our notes</h3>
+        <textarea id="pn-notes" rows="6" placeholder="What we liked, questions to check, friends' tips, hotel ideas…">${esc(r.notes||"")}</textarea>
+        <p class="small muted" style="margin:6px 0 0">Saved for both of you as you type.</p>
+      </div>
+      <div class="panel"><h3>Saved links</h3>
+        ${links.length?`<ul class="plinks">${links.map((l,i)=>`<li><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.t||l.url)}</a><button class="x" data-rmlink="${i}" aria-label="Remove">×</button></li>`).join("")}</ul>`:'<p class="small muted" style="margin:0 0 8px">Blogs, videos, hotels or tours you want to come back to.</p>'}
+        <div class="stack" style="gap:8px"><input type="text" id="pl-url" placeholder="Paste a link (https://…)"><div class="row" style="gap:8px"><input type="text" id="pl-t" placeholder="Name (optional)" style="flex:1;min-width:120px"><button class="btn tiny" id="pl-add">Save link</button></div></div>
+      </div>
+      <div class="panel"><h3>Look it up</h3><div class="quick" style="margin:0">${researchLinks(d).map(([l,u])=>`<a class="btn tiny" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(l)} ↗</a>`).join("")}</div></div>
+    </div>
+  </div>`;
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("[data-pguide],[data-pjump],[data-rmlink],#pl-add");if(!b)return;
+  const d=S.placeOpen&&S.dests.find(x=>x.id===S.placeOpen);if(!d)return;
+  if(b.dataset.pjump){e.preventDefault();const el=document.getElementById(b.dataset.pjump);if(el)el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});return}
+  if(b.dataset.pguide){getGuide(d);return}
+  if(b.dataset.rmlink){const l=L_(researchOf(d.id).links).filter((_,i)=>i!==+b.dataset.rmlink);saveResearch(d.id,{links:l});renderPlaceDetail(d);return}
+  if(b.id==="pl-add"){let u=$("#pl-url").value.trim();const t=$("#pl-t").value.trim();if(u&&!/^https?:\/\//i.test(u))u="https://"+u;
+    try{new URL(u)}catch(_){$("#pmsg").textContent="That doesn't look like a link.";return}
+    saveResearch(d.id,{links:[...L_(researchOf(d.id).links),{url:u,t:t||u.replace(/^https?:\/\/(www\.)?/,"").slice(0,60)}]});renderPlaceDetail(d)}
+});
+document.addEventListener("input",e=>{if(e.target.id!=="pn-notes")return;const id=S.placeOpen;if(id)saveResearch(id,{notes:e.target.value},800)});
 
 /* ---------- trips ---------- */
 const PACK_COMMON=["Kids' medicines, ORS, thermometer","Sunscreen and hats","Snacks and water bottles","Wet wipes and tissues","Change of clothes in hand luggage","Tablet, headphones, chargers","Small toys and colouring for the journey","Light jackets","Power bank"];
@@ -966,6 +1134,7 @@ function renderTripDetail(t){
         <label class="f">Status<select id="tf-status">${["idea","booked","done"].map(s=>`<option value="${s}"${t.status===s?" selected":""}>${{idea:"Idea",booked:"Booked",done:"Done"}[s]}</option>`).join("")}</select></label>
         <label class="f">Budget (₹)<input type="number" id="tf-budget" value="${t.budget||""}" min="0" step="1000"></label>
       </div>
+      ${d?`<p class="small" style="margin:12px 0 0"><a href="#place-${encodeURIComponent(d.id)}">🔎 Research and notes for ${esc(d.name)} →</a></p>`:""}
       ${d?`<p class="small muted" style="margin:12px 0 0">${esc(d.why)}. Estimate ${money(d.cost[0])}–${money(d.cost[1])} for ${d.days} days.${d.visa?" Visa: "+esc(d.visa)+".":""}</p>`:""}
       </div>
       ${onTrip(t)?aiPanel(t):""}
@@ -1153,13 +1322,16 @@ async function boot(){
   if(!db){clearTimeout(loadT);$("#conn").textContent="Sign in to see and save your plans.";S.ready=true;render();return}
   S.db=db;
   S.gp=window.GP||null;
-  window.claude.use("sample").then(a=>{S.sample=a;if(a&&S.tripOpen&&S.ready)render()}).catch(()=>{});
-  let got=0;const need=4;const mark=()=>{if(++got===need){S.ready=true;clearTimeout(loadT);$("#conn").textContent="";if(!yearChosen){S.year=pickYear();yearChosen=true}fillSettings();render()}};
+  window.claude.use("sample").then(a=>{S.sample=a;if(a&&(S.tripOpen||S.placeOpen)&&S.ready)render()}).catch(()=>{});
+  let got=0;const need=5;const mark=()=>{if(++got===need){S.ready=true;clearTimeout(loadT);$("#conn").textContent="";if(!yearChosen){S.year=pickYear();yearChosen=true}fillSettings();render()}};
   const once=fn=>{let done=false;return (...a)=>{const r=fn(...a);if(!done){done=true;mark()}else if(r!=="skip")render()}};
   const err=e=>{$("#conn").textContent="Couldn't load some data: "+(e.message||e.code)};
   db.collection("holidays").onSnapshot(once(s=>{S.holidays={};s.docs.forEach(d=>{const v=d.data();S.holidays[v.year||+d.id]=v})}),err);
   db.collection("destinations").onSnapshot(once(s=>{S.dests=s.docs.map(d=>({id:d.id,...d.data()}))}),err);
   db.doc("prefs/main").onSnapshot(once(s=>{if(s.exists){S.prefs={visited:[],visitedOther:[],satWork:false,extraOff:{},...s.data()};if(S.prefs.skin)applySkin(S.prefs.skin)}}),err);
+  db.collection("research").onSnapshot(once(s=>{S.research={};s.docs.forEach(d=>{S.research[d.id]=d.data()});
+    if(S.placeOpen&&document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#placedetailwrap"))return "skip";
+  }),err);
   db.collection("trips").onSnapshot(once(s=>{
     const open=S.tripOpen;S.trips=s.docs.map(d=>({...d.data(),id:d.id}));
     // keep the detail view stable while typing: re-render list views only

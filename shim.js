@@ -1,7 +1,7 @@
 /* Our Family Getaways: connects the app to its own server (login, saving, AI ideas) and to Google Photos. */
 (function () {
   "use strict";
-  const COLS = ["holidays", "destinations", "prefs", "trips"];
+  const COLS = ["holidays", "destinations", "prefs", "trips", "research"];
   let state = null, setupInfo = null, me = null, polling = null;
   const subs = [];
   const dirty = {}; // "c/id" -> time of last local write, so a poll doesn't undo typing in progress
