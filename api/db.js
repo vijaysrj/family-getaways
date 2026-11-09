@@ -2,7 +2,7 @@ import { authed, redis, pipeline, readJson, send, setup } from "./_lib.js";
 import fs from "node:fs";
 const seed = JSON.parse(fs.readFileSync(new URL("./_seed.json", import.meta.url), "utf8"));
 
-const COLS = ["holidays", "destinations", "prefs", "trips"];
+const COLS = ["holidays", "destinations", "prefs", "trips", "research"];
 const key = c => "fg:c:" + c;
 const ok = (c, id) => COLS.includes(c) && /^[A-Za-z0-9_\-.~:@+]{1,200}$/.test(id || "x");
 
