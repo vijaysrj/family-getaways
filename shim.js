@@ -141,10 +141,10 @@
   /* ---------- AI ideas ---------- */
   async function aiJson(prompt, opts = {}) {
     let r;
-    try { r = await fetch("/api/ideas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: typeof prompt === "string" ? prompt : prompt.map(m => m.content).join("\n\n") }), signal: opts.signal }); }
+    try { r = await fetch("/api/ideas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: typeof prompt === "string" ? prompt : prompt.map(m => m.content).join("\n\n"), fast: !!opts.fast }), signal: opts.signal }); }
     catch (e) { throw { code: e.name === "AbortError" ? "cancelled" : "upstream_error", message: String(e) }; }
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw { code: j.code || "upstream_error", message: j.message || r.statusText };
+    if (!r.ok) throw { code: j.code || (r.status === 504 ? "timeout" : "upstream_error"), message: j.message || ("HTTP " + r.status + " " + r.statusText) };
     return j;
   }
   const sample = Object.assign(async (p, o) => ({ text: JSON.stringify(await aiJson(p, o)) }), { json: aiJson });
