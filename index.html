@@ -729,6 +729,13 @@ function renderExplore(){
 
 /* ---------- place research: read up on a place before planning a trip ---------- */
 const PR={busy:{},err:{},auto:{}};
+// Ready-made guides ship with the site as guides/<id>.json; a guide saved in the app (from AI) wins.
+const GUIDES={},GLOAD={};
+function loadGuide(d){
+  if(d.id in GUIDES||GLOAD[d.id])return;GLOAD[d.id]=1;
+  fetch("/guides/"+encodeURIComponent(d.id)+".json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).catch(()=>null)
+    .then(g=>{GUIDES[d.id]=g&&typeof g.overview==="string"?g:null;delete GLOAD[d.id];if(S.placeOpen===d.id){const el=$("#pguide");if(el)el.outerHTML=guideHtml(d)}});
+}
 function researchOf(id){return S.research[id]||{}}
 function saveResearch(id,patch,delay=0){
   S.research[id]={...researchOf(id),...patch,updated:Date.now()};
@@ -785,14 +792,16 @@ function rerenderGuide(d){if(S.placeOpen!==d.id)return;const el=$("#pguide");if(
 const ageTag=f=>{f=String(f||"").toLowerCase();return f.includes("4")&&!f.includes("10")?"Age 4":f.includes("10")&&!f.includes("4")?"Age 10":f.includes("adult")?"Adults":"Both kids"};
 const L_=a=>Array.isArray(a)?a:[];
 function guideHtml(d){
-  const r=researchOf(d.id),g=r.guide,busy=PR.busy[d.id],err=PR.err[d.id];
-  const head=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">✨ Research guide</h3>${g?`<span class="small muted">From AI, ${esc(r.guideAt||"")}${S.sample?` · <button class="btn tiny ghost" data-pguide="${d.id}"${busy?" disabled":""}>${busy?"Refreshing…":"Refresh"}</button>`:""}</span>`:""}</div>`;
+  const r=researchOf(d.id),st=GUIDES[d.id],g=r.guide||st,busy=PR.busy[d.id],err=PR.err[d.id];
+  const head=`<div class="row" style="justify-content:space-between"><h3 style="margin:0">📖 Research guide</h3>${g?`<span class="small muted">${r.guide?"From AI, "+esc(r.guideAt||""):"Written "+esc(st.written||"")}</span>`:""}</div>`;
+  if(!g&&!(d.id in GUIDES))return `<div class="panel" id="pguide">${head}${[90,75,82,60].map(w=>`<div class="pskel" style="width:${w}%"></div>`).join("")}</div>`;
   if(!g){
     if(busy)return `<div class="panel" id="pguide">${head}<p class="small muted">Reading up on ${esc(placeName(d))} for the four of you. This takes about half a minute…</p>${[90,75,82,60,88,70].map(w=>`<div class="pskel" style="width:${w}%"></div>`).join("")}</div>`;
     return `<div class="panel" id="pguide">${head}
       <p style="margin:6px 0 10px">${esc(d.why||"")}${d.why?".":""} Usually ${d.days} days, about ${money(d.cost[0])}–${money(d.cost[1])} for the four of you.${d.visa?" Visa: "+esc(d.visa)+".":""}</p>
       ${err?`<div class="ainote" style="color:var(--warn)">${esc(err)}</div>`:""}
-      ${S.sample?`<button class="btn primary" style="margin-top:10px" data-pguide="${d.id}">Get the full research guide</button><p class="small muted" style="margin:8px 0 0">Things to do for each kid, getting there from Chennai, where to stay, costs, safety and ${d.kind==="abroad"?"visa":"season"} notes. Saved here once it's ready.</p>`:`<p class="small muted">AI isn't switched on, so use the links on the right to read up.</p>`}</div>`;
+      <p class="small muted" style="margin:8px 0 0">There's no ready-made guide for this place yet. Guides for new places are added with the yearly update. Until then, use the links on the right to read up.</p>
+      ${S.sample?`<button class="btn tiny" style="margin-top:10px" data-pguide="${d.id}">Try asking AI (can be slow)</button>`:""}</div>`;
   }
   const sec=(id,t,body)=>body?`<div class="panel" id="pg-${id}"><h3>${t}</h3>${body}</div>`:"";
   const bul=a=>L_(a).length?`<ul class="pbul">${L_(a).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
@@ -812,13 +821,13 @@ function guideHtml(d){
   ${sec("safety","Safety and health",(L_(g.safety).length?bul(g.safety):"")+(L_(g.health).length?`<p class="small" style="margin:12px 0 6px;font-weight:700">Health</p>${bul(g.health)}`:"")+(L_(g.kids).length?`<p class="small" style="margin:12px 0 6px;font-weight:700">With a 4- and a 10-year-old</p>${bul(g.kids)}`:""))}
   ${d.kind==="abroad"&&g.visa?sec("visa","Visa and entry",`<p class="small" style="margin:0">${esc(g.visa)}</p><p class="small muted" style="margin:8px 0 0">Rules change. Check the official embassy or e-visa site before you book.</p>`):""}
   ${sec("days",`A ${d.days}-day plan`,L_(g.days).length?`<div class="pdays">${L_(g.days).map((x,i)=>`<div><em>Day ${esc(x.day||i+1)}</em><span>${esc(x.plan)}</span></div>`).join("")}</div>`:"")}
-  <p class="small muted" style="margin:0">AI research can be out of date. Check prices, timings and rules before you book.</p>
+  <p class="small muted" style="margin:0">Prices are rough estimates for the four of you and can change. Check prices, timings and rules before you book.</p>
   </div>`;
 }
 function renderPlaceDetail(d){
   const r=researchOf(d.id),v=isVisited(d),links=L_(r.links);
   const trips=S.trips.filter(t=>t.destId===d.id);
-  if(!r.guide&&S.sample&&!PR.auto[d.id]&&!PR.busy[d.id]){PR.auto[d.id]=true;setTimeout(()=>getGuide(d),0)}
+  if(!r.guide)loadGuide(d);
   $("#placedetailwrap").innerHTML=`
   <div class="row" style="justify-content:space-between;margin-bottom:10px"><a class="btn tiny" href="#explore">← All places</a><span class="status-line" id="pmsg"></span></div>
   <div class="triphero">${scene(d)}<h2>${esc(d.name)}</h2></div>
